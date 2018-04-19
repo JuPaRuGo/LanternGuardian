@@ -1,6 +1,8 @@
 package tutoapp.com.lanternguardian;
 
 import android.Manifest;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -35,6 +37,13 @@ public class MainActivity extends AppCompatActivity  {
         }
 
         ToggleButton btn=(ToggleButton) findViewById(R.id.toggleButton);
+        if(isMyServiceRunning(LanternService.class)){
+
+
+            btn.setChecked(true);
+        }else{
+            btn.setChecked(false);
+        }
         final Intent in=new Intent(getApplicationContext(), LanternService.class);
         btn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -68,5 +77,13 @@ public class MainActivity extends AppCompatActivity  {
         }
     }
 
-
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

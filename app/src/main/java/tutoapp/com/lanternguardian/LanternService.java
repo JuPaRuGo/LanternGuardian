@@ -21,7 +21,7 @@ public class LanternService extends Service implements SensorEventListener {
     private Sensor mProximity;
     private boolean flashLightStatus;
     double lecturaLuz=10;
-    double lecturaProximidad;
+    double lecturaProximidad=50;
 
     public LanternService() {
 
@@ -57,18 +57,21 @@ public class LanternService extends Service implements SensorEventListener {
                 lecturaLuz = event.values[0];
                 Log.i("lecturaL",lecturaLuz+"");
 
-            break;
-            case Sensor.TYPE_PROXIMITY :
-
-                lecturaProximidad=event.values[0];
-                Log.i("lecturaP",lecturaProximidad+"");
                 if(lecturaProximidad!=0){//quiere decir que esta tapado
 
                     if(lecturaLuz<=1){
                         Log.i("Luz","1");
                         flashLightOn();
-                    }else{}
+                    }else if(lecturaLuz>50){
+                        flashLightOff();
+
+                    }
                 }
+            break;
+            case Sensor.TYPE_PROXIMITY :
+
+                lecturaProximidad=event.values[0];
+                Log.i("lecturaP",lecturaProximidad+"");
 
                 break;
         }
