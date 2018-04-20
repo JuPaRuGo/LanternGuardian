@@ -34,8 +34,8 @@ public class LanternService extends Service implements SensorEventListener {
         Log.i("TAG","se creo");
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         mProximity=mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_UI);
     }
 
     @Override
@@ -59,10 +59,14 @@ public class LanternService extends Service implements SensorEventListener {
 
                 if(lecturaProximidad!=0){//quiere decir que esta tapado
 
-                    if(lecturaLuz<=1){
+                    if(lecturaLuz==0){
                         Log.i("Luz","1");
-                        flashLightOn();
+                        if(flashLightStatus==false){
+                            flashLightOn();
+                        }
+                        flashLightStatus=true;
                     }else if(lecturaLuz>50){
+                        flashLightStatus=false;
                         flashLightOff();
 
                     }
@@ -83,9 +87,11 @@ public class LanternService extends Service implements SensorEventListener {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onDestroy() {
         super.onDestroy();
+        flashLightOff();
         mSensorManager.unregisterListener(this);
     }
 
@@ -114,4 +120,5 @@ public class LanternService extends Service implements SensorEventListener {
         } catch (CameraAccessException e) {
         }
     }
+
 }
