@@ -104,18 +104,30 @@ public class LanternService extends Service implements SensorEventListener {
                         @Override
                         public void run() {
                             while(true) {
-                                Log.i("millis",millis+"");
+
                                 if(lecturaProximidad==0 && MovementDetected==true){
                                     millis++;
-
+                                    Log.i("prox+move",lecturaProximidad+" "+MovementDetected);
                                     if(millis>10000){
                                         flashLightOff();
+                                        try {
+                                            this.finalize();
+                                        } catch (Throwable throwable) {
+                                            throwable.printStackTrace();
+                                        }
                                         millis=0;
+                                        Log.i("status","finalizo");
                                     }
                                 }else if(lecturaProximidad==0 && millis==60000){
-
+                                    Log.i("prox+millis",lecturaProximidad+" "+millis);
                                     flashLightOff();
                                     millis=0;
+                                    try {
+                                        this.finalize();
+                                    } catch (Throwable throwable) {
+                                        throwable.printStackTrace();
+                                    }
+                                    Log.i("status","finalizo");
                                 }
 
 
