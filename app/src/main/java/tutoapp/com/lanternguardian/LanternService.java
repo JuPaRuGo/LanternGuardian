@@ -80,7 +80,7 @@ public class LanternService extends Service implements SensorEventListener {
             case Sensor.TYPE_PROXIMITY :
 
                 lecturaProximidad=event.values[0];
-                Log.i("lecturaP",lecturaProximidad+"");
+                Log.i("LecturaP",lecturaProximidad+"");
 
                 break;
         }
