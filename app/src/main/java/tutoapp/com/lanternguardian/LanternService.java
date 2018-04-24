@@ -3,6 +3,7 @@ package tutoapp.com.lanternguardian;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -11,6 +12,7 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
@@ -23,7 +25,14 @@ public class LanternService extends Service implements SensorEventListener {
     private boolean flashLightStatus;
     double lecturaLuz=10;
     double lecturaProximidad=50;
-    BatteryManager myBatteryManager;
+    private Sensor accelerometer;
+    private boolean MovementDetected;
+
+    private float[] mGravity;
+    private float mAccel;
+    private float mAccelCurrent;
+    private float mAccelLast;
+
     public LanternService() {
 
     }
@@ -35,9 +44,14 @@ public class LanternService extends Service implements SensorEventListener {
         Log.i("TAG","se creo");
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         mProximity=mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_UI);
-        myBatteryManager = (BatteryManager) getApplicationContext().getSystemService(Context.BATTERY_SERVICE);
+        mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mAccel = 0.00f;
+        mAccelCurrent = SensorManager.GRAVITY_EARTH;
+        mAccelLast = SensorManager.GRAVITY_EARTH;
+
     }
 
     @Override
@@ -57,20 +71,17 @@ public class LanternService extends Service implements SensorEventListener {
             case Sensor.TYPE_LIGHT :
 
                 lecturaLuz = event.values[0];
-                Log.i("lecturaL",lecturaLuz+"");
+                Log.i("lecturaLL",lecturaLuz+"");
 
-                if(lecturaProximidad!=0){//quiere decir que esta tapado
+                if(lecturaProximidad!=0 && MovementDetected && isPlugged(getApplicationContext())==false ){//quiere decir que no esta tapado y hay movimiento
 
-                    if(lecturaLuz==0){
+                    if(lecturaLuz==1){
                         Log.i("Luz","1");
                         if(flashLightStatus==false){
-                            if (isUSBCharging() == false) {
-                                flashLightOn();
-                            }
-
+                            flashLightOn();
                         }
                         flashLightStatus=true;
-                    }else if(lecturaLuz>20){
+                    }else if(lecturaLuz>10){
                         flashLightStatus=false;
                         flashLightOff();
 
@@ -80,9 +91,37 @@ public class LanternService extends Service implements SensorEventListener {
             case Sensor.TYPE_PROXIMITY :
 
                 lecturaProximidad=event.values[0];
-                Log.i("LecturaP",lecturaProximidad+"");
+                Log.i("lecturaLP",lecturaProximidad+"");
 
                 break;
+                case Sensor.TYPE_ACCELEROMETER:
+                    mGravity = event.values.clone();
+                    // Shake detection
+                    float x = mGravity[0];
+                    float y = mGravity[1];
+                    float z = mGravity[2];
+                    mAccelLast = mAccelCurrent;
+
+                    mAccelCurrent = (float) Math.sqrt(x*x + y*y + z*z);
+                    float delta = mAccelCurrent - mAccelLast;
+                    mAccel = mAccel * 0.9f + delta;
+
+                    // Make this higher or lower according to how much
+                    // motion you want to detect
+                    if(mAccel >=1 ){
+                        // do something
+
+                        MovementDetected=true;
+                        Log.i("MOVEMENT",MovementDetected+"");
+                    }else{
+
+                        if(mAccel <1 && mAccel>0 ){
+                            MovementDetected=false;
+                            Log.i("MOVEMENT",MovementDetected+"");
+                        }
+
+                    }
+                    break;
         }
 
     }
@@ -125,8 +164,14 @@ public class LanternService extends Service implements SensorEventListener {
         } catch (CameraAccessException e) {
         }
     }
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public boolean isUSBCharging(){
-        return  myBatteryManager.isCharging();
+    public static boolean isPlugged(Context context) {
+        boolean isPlugged= false;
+        Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        isPlugged = plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB;
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+            isPlugged = isPlugged || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
+        }
+        return isPlugged;
     }
 }
