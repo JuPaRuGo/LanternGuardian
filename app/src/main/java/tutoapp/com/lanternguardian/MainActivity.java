@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -36,29 +38,31 @@ public class MainActivity extends AppCompatActivity  {
             ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.CAMERA}, CAMERA_REQUEST);
         }
 
-        ToggleButton btn=(ToggleButton) findViewById(R.id.toggleButton);
-        if(isMyServiceRunning(LanternService.class)){
-
-
-            btn.setChecked(true);
-        }else{
+        final ToggleButton btn=(ToggleButton) findViewById(R.id.toggleButton);
+        if(isMyServiceRunning(LanternService.class)==false){
+            btn.setSelected(false);
             btn.setChecked(false);
+            btn.setTextColor(Color.RED);
+        }else{
+            btn.setSelected(true);
+            btn.setChecked(true);
+            btn.setTextColor(Color.RED);
         }
         final Intent in=new Intent(getApplicationContext(), LanternService.class);
-        btn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-
+            public void onClick(View v) {
+                if(btn.isChecked())
+                {
                     startService(in);
-
-                }else{
-
+                    Toast.makeText(MainActivity.this, "Toggle button is on", Toast.LENGTH_LONG).show();
+                }
+                else {
                     stopService(in);
+                    Toast.makeText(MainActivity.this, "Toggle button is Off", Toast.LENGTH_LONG).show();
                 }
             }
         });
-
     }
 
     @Override

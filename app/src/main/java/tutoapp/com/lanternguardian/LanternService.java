@@ -9,6 +9,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
@@ -22,7 +23,7 @@ public class LanternService extends Service implements SensorEventListener {
     private boolean flashLightStatus;
     double lecturaLuz=10;
     double lecturaProximidad=50;
-
+    BatteryManager myBatteryManager;
     public LanternService() {
 
     }
@@ -36,6 +37,7 @@ public class LanternService extends Service implements SensorEventListener {
         mProximity=mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_UI);
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_UI);
+        myBatteryManager = (BatteryManager) getApplicationContext().getSystemService(Context.BATTERY_SERVICE);
     }
 
     @Override
@@ -62,10 +64,13 @@ public class LanternService extends Service implements SensorEventListener {
                     if(lecturaLuz==0){
                         Log.i("Luz","1");
                         if(flashLightStatus==false){
-                            flashLightOn();
+                            if (isUSBCharging() == false) {
+                                flashLightOn();
+                            }
+
                         }
                         flashLightStatus=true;
-                    }else if(lecturaLuz>50){
+                    }else if(lecturaLuz>20){
                         flashLightStatus=false;
                         flashLightOff();
 
@@ -120,5 +125,8 @@ public class LanternService extends Service implements SensorEventListener {
         } catch (CameraAccessException e) {
         }
     }
-
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public boolean isUSBCharging(){
+        return  myBatteryManager.isCharging();
+    }
 }

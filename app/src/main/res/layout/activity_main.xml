@@ -14,5 +14,10 @@
         android:layout_height="wrap_content"
         android:text="ToggleButton"
         tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="208dp" />
+        tools:layout_editor_absoluteY="208dp"
+        android:checked="true"
+        android:textOff="On"
+        android:textOn="Off"
+        />
+
 </RelativeLayout>
