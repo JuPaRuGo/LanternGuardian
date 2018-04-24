@@ -14,6 +14,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
@@ -27,12 +28,12 @@ public class LanternService extends Service implements SensorEventListener {
     double lecturaProximidad=50;
     private Sensor accelerometer;
     private boolean MovementDetected;
-
+    private Vibrator vibrador;
     private float[] mGravity;
     private float mAccel;
     private float mAccelCurrent;
     private float mAccelLast;
-
+    private long millis;
     public LanternService() {
 
     }
@@ -51,7 +52,7 @@ public class LanternService extends Service implements SensorEventListener {
         mAccel = 0.00f;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccelLast = SensorManager.GRAVITY_EARTH;
-
+        vibrador=(Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -91,9 +92,43 @@ public class LanternService extends Service implements SensorEventListener {
             case Sensor.TYPE_PROXIMITY :
 
                 lecturaProximidad=event.values[0];
+                long[] pattern = {0, 100, 1000};
+
+                vibrador.vibrate(pattern, 0);
+
                 Log.i("lecturaLP",lecturaProximidad+"");
+                if(lecturaProximidad==0){
+                    //contamos hasta cuando deje de ser 0 o llegue a 10 segundos
+
+                    Thread thread = new Thread() {
+                        @Override
+                        public void run() {
+                            while(true) {
+                                Log.i("millis",millis+"");
+                                if(lecturaProximidad==0 && MovementDetected==true){
+                                    millis++;
+
+                                    if(millis>10000){
+                                        flashLightOff();
+                                        millis=0;
+                                    }
+                                }else if(lecturaProximidad==0 && millis==60000){
+
+                                    flashLightOff();
+                                    millis=0;
+                                }
+
+
+                            }
+                        }
+                    };
+
+                    thread.start();
+
+                }else{millis=0;}
 
                 break;
+
                 case Sensor.TYPE_ACCELEROMETER:
                     mGravity = event.values.clone();
                     // Shake detection
