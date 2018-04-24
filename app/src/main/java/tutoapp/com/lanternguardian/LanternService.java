@@ -92,9 +92,9 @@ public class LanternService extends Service implements SensorEventListener {
             case Sensor.TYPE_PROXIMITY :
 
                 lecturaProximidad=event.values[0];
-                long[] pattern = {0, 100, 1000};
 
-                vibrador.vibrate(pattern, 0);
+
+                vibrador.vibrate(1000);
 
                 Log.i("lecturaLP",lecturaProximidad+"");
                 if(lecturaProximidad==0){
